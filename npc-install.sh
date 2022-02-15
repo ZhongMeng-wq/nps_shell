@@ -1,5 +1,5 @@
 #!/bin/bash
-if ! [ -x "$(command -v git)" ]; then
+if ! [ -x "$(command -v wget)" ]; then
     yuan=$(cat /etc/redhat-release)
     if [[ $yuan =~ "CentOS" ]]
     then
