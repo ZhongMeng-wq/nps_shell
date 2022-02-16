@@ -9,9 +9,10 @@ if ! [ -x "$(command -v wget)" ]; then
         apt install wget -y
     fi
 fi
+#检测是否安装wget
 
 echo "-----------------------------------------------------------"
-echo "欢迎来到nps服务器一键安装脚本";
+echo "欢迎使用nps服务器一键安装脚本";
 echo "此配置为基础配置,详细请编辑/etc/nps/conf/nps.conf文件"
 echo "此客户端适用CentOS6/Debian8/Ubuntu16以上版本,依赖wget，请确保安装wget"
 echo "成功安装后，你可以通过autonps命令来执行脚本"
@@ -26,7 +27,26 @@ IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,
 server_ip="此服务器IP地址是$IP"
 hainei=(https://gitee.com/zhang20021230/nps-domestic-package/attach_files/967435/download/linux_amd64_server.tar.gz https://gitee.com/zhang20021230/nps-domestic-package/attach_files/967437/download/linux_arm64_server.tar.gz https://gitee.com/zhang20021230/nps-domestic-package/attach_files/967436/download/linux_arm_v5_server.tar.gz)
 haiwai=(https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_amd64_server.tar.gz https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_arm64_server.tar.gz https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_arm_v5_server.tar.gz)
-#cat_config
+#IP参数和链接
+
+function out_config()
+{
+
+    echo $cat_nps_type_o
+    echo $cat_nps_port_o
+    echo "-------------------------桥参数----------------------------"
+    echo $cat_nps_user_o
+    echo $cat_nps_pass_o
+    echo $cat_nps_web_o
+    echo "-----------------------Web管理页面-------------------------"
+    echo $cat_nps_users_o
+    echo $cat_nps_register_o
+    echo $cat_nps_user_name_o
+    echo "------------------------多用户参数--------------------------"
+    echo $server_ip
+}
+#输出参数
+
 function cat_config()
 {
     cat_nps_type=$(cat /etc/nps/conf/nps.conf | grep "bridge_type")
@@ -61,8 +81,8 @@ function cat_config()
     cat_nps_user_name_o="管理页面允许用户修改用户名${cat_nps_user_name/allow_user_change_username/}"
     #读取是否允许用户修改用户名
 }
+#读取配置
 
-#config
 function nps_config()
 {   
     echo "1.查询"
@@ -75,16 +95,7 @@ function nps_config()
     then
         cat_config
 
-        echo $cat_nps_type_o
-        echo $cat_nps_port_o
-        echo $cat_nps_user_o
-        echo $cat_nps_pass_o
-        echo $cat_nps_web_o
-        echo $cat_nps_users_o
-        echo $cat_nps_register_o
-        echo $cat_nps_user_name_o
-        echo $server_ip
-        echo "-----------------------------------------------------------"
+        out_config
     elif [[ $conf_r_w = "2" ]]
     then
         cat_config
@@ -160,16 +171,7 @@ function nps_config()
             nps restart
             cat_config
 
-            echo $cat_nps_type_o
-            echo $cat_nps_port_o
-            echo $cat_nps_user_o
-            echo $cat_nps_pass_o
-            echo $cat_nps_web_o
-            echo $cat_nps_users_o
-            echo $cat_nps_register_o
-            echo $cat_nps_user_name_o
-            echo $server_ip
-            echo "-----------------------------------------------------------"
+            out_config
 
         elif [[ $right = "n" ]]
         then
@@ -181,13 +183,27 @@ function nps_config()
         echo "输入有误"
     fi
 }
+#配置
+
+function nps_uninstall()
+{
+    nps stop
+    nps uninstall
+    rm -rf /opt/nps
+    rm -rf /etc/nps
+    rm -rf /usr/bin/autonps
+    rm -rf /usr/bin/nps
+    rm -rf /usr/bin/nps-update
+}
+#删除
+
 read -rp "请输入选择:" -e xuanze
 
 if [[ $xuanze = "1" ]]
 then
     if [ ! -d "/etc/nps" ]; then
         echo "准备安装"
-        mkdir /opt/nps/
+        mkdir -P /opt/nps/
     else
         echo "检测到源文件，请选择[y]删除或[n]停止脚本";
         
@@ -197,12 +213,8 @@ then
 
         if [[ $rm = "y" ]]
         then
-            nps stop
-            nps uninstall
-            rm -rf /etc/nps
-            rm -rf /usr/bin/autonps
-            rm -rf /usr/bin/nps
-            rm -rf /usr/bin/nps-update
+            nps_uninstall
+
             echo "卸载完成"
             echo "-----------------------------------------------------------"
         else
@@ -252,17 +264,17 @@ then
         echo "请修改默认配置"
         echo "-----------------------------------------------------------"
         nps_config
-    elif [[$area = "2" ]]
+    elif [[ $area = "2" ]]
     then
         if [[ $banben = "1" ]]
         then
             mkdir -p /opt/nps
-            wget -P /opt/nps ${haiwai[2]}
+            wget -P /opt/nps ${haiwai[0]}
             tar -zxvf  /opt/nps/linux_amd64_server.tar.gz -C /opt/nps/
         elif [[ $banben = "2" ]]
         then
             mkdir -p /opt/nps
-            wget -P /opt/nps ${haiwai[2]}
+            wget -P /opt/nps ${haiwai[1]}
             tar -zxvf  /opt/nps/linux_arm64_server.tar.gz -C /opt/nps/
         elif [[ $banben = "3" ]]
         then
@@ -281,13 +293,11 @@ then
     else
         exit 1
     fi
-    rm -rf /opt/nps
 
     BASE_PATH=$(cd `dirname $0`;pwd)
     cp "$BASE_PATH/nps_install.sh" /usr/bin/autonps
     chmod 777 /usr/bin/autonps
 
-    bash
     echo "安装完成，你可以通过autonps命令来执行脚本"
     echo "-----------------------------------------------------------"
 elif [[ $xuanze = "2" ]]
@@ -298,10 +308,7 @@ then
 
     if [[ $rm = "y" ]]
     then
-        nps stop
-        nps uninstall
-        rm -rf /etc/nps
-        rm -rf /usr/bin/autonps
+        nps_uninstall
     else
         exit 1
     # 存在则卸载
@@ -309,7 +316,13 @@ then
     # 判断文件是否存在
 elif [[ $xuanze = "3" ]]
 then
-    nps_config
+    if [ ! -d "/etc/nps/" ]; 
+    then
+        echo "未检测到 /etc/nps/ 下安装 nps，请重新运行此脚本并安装";
+        exit 1
+    else
+        nps_config
+    fi
 elif [[ $xuanze = "4" ]]
 then
     exit 1
@@ -317,3 +330,4 @@ else
     echo "错误"
     exit 1
 fi
+bash
