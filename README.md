@@ -67,14 +67,47 @@ NPS是一款轻量级、高性能、强大的<strong>内网穿透</strong>代理
 
 一键脚本
 <pre class="hl"><code class="">bash &lt;(curl -Ls http://nps.loline.top/shell/fx/npc-install.sh)</code><code class=""></code></pre>
-客户端没事可说的，就简单安装和删除
+客户端安装脚本
 
 同样支持大陆和海外下载
 <img class="aligncenter" src="https://blog.loline.top/wp-content/uploads/2022/02/npc1.png" />
 <img class="aligncenter" src="https://blog.loline.top/wp-content/uploads/2022/02/npc2.png" />
 
+&nbsp;
+
+还有客户端管理脚本，在客户端安装脚本后自动安装
+
+功能如下:
+
+1.通信桥配置，支持
+<ol>
+ 	<li>桥IP与端口配置</li>
+ 	<li>桥密钥配置</li>
+ 	<li>桥模式配置</li>
+ 	<li>桥web认证配置</li>
+</ol>
+2.web域名配置
+<ol>
+ 	<li>web域名查询</li>
+ 	<li>web域名删除</li>
+ 	<li>web域名添加</li>
+</ol>
+3.端口配置(TCP|UDP)
+<ol>
+ 	<li>端口查询</li>
+ 	<li>端口删除</li>
+ 	<li>端口添加</li>
+</ol>
+4.卸载npc
+
+5.备份配置文件与恢复配置文件
+
+<img class="alignnone size-medium wp-image-58" src="https://blog.loline.top/wp-content/uploads/2022/02/npc-1-300x213.jpg" alt="" width="300" height="213" /> <img class="alignnone size-medium wp-image-59" src="https://blog.loline.top/wp-content/uploads/2022/02/npc2-1-300x296.jpg" alt="" width="300" height="296" /> <img class="alignnone size-medium wp-image-60" src="https://blog.loline.top/wp-content/uploads/2022/02/npc3-1-282x300.jpg" alt="" width="282" height="300" />
+
+部分演示
+
 [/infobox]
 
-更多教程见作者<a href="https://ehang-io.github.io/nps/">官方手册</a>
-
+更多教程见原作者<a href="https://ehang-io.github.io/nps/">官方手册</a><br />
+第一次编写，不好见谅<br />
 交流QQ群:606080674
