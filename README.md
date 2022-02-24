@@ -1,9 +1,9 @@
 # nps_shell
 nps内网穿透简单安装脚本
 
-nps_install.sh 服务器端脚本
-npc-install.sj 客户端安装脚本
-autonpc 客户端管理脚本
+nps_install.sh 服务器端脚本<br />
+npc-install.sj 客户端安装脚本<br />
+autonpc 客户端管理脚本<br />
 
 <p style="text-align: center;"><span style="font-size: 24pt;"><strong>此文章关于NPS内外穿透的linux端一键安装脚本，脚本包括服务器端和客户端</strong></span></p>
 此脚本包括服务器端和客户端，目前是初次编写，且功能不多，简单编写，代码量只有一两百行而已，新手编写，写的不好见谅。目前为初次测试，可实现功能不多。
