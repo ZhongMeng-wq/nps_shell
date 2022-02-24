@@ -2,7 +2,7 @@
 
 echo "----------------------------------------"
 echo "正在检测更新....."
-version="1.0.3"
+version="1.0.4"
 update=$(wget http://nps.loline.top/shell/update.html -q -O -)
 echo "----------------------------------------"
 echo "正在检测更新"
@@ -11,6 +11,8 @@ then
     echo "当前版本:$version"
     echo "已是最新版本"
 else
+    echo "当前版本:$version"
+    echo "云端版本:$update"
     echo "当前版本与云端不一致"
     echo "建议更新"
     echo "----------------------------------------"
