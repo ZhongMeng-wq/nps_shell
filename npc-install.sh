@@ -178,18 +178,18 @@ if [[ $npc = "1" ]]
 
                 if [[ $CONTINUE = "1" ]]
                     then
-                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/958009/download/linux_amd64_client.tar.gz
+                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/977545/download/linux_amd64_client.tar.gz
                         tar -zxvf  /root/linux_amd64_client.tar.gz -C /npc
                 elif [[ $CONTINUE = "2" ]]
                     then
                         echo "还没更新"
                 elif [[ $CONTINUE = "3" ]]
                     then
-                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/958007/download/linux_arm64_client.tar.gz
+                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/977544/download/linux_arm64_client.tar.gz
                         tar -zxvf  /root/linux_arm64_client.tar.gz -C  /npc
                 elif [[ $CONTINUE = "4" ]]
                     then
-                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/958008/download/linux_arm_v5_client.tar.gz
+                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/977546/download/linux_arm_v5_client.tar.gz
                         tar -zxvf  /root/linux_arm_v5_client.tar.gz -C  /npc
                 else
                     echo "不符合条件，已退出。"
