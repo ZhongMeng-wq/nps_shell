@@ -1,0 +1,556 @@
+#!/bin/bash
+
+echo "----------------------------------------"
+echo "正在检测更新....."
+version="1.0.3"
+update=$(wget http://nps.loline.top/shell/update.html -q -O -)
+echo "----------------------------------------"
+echo "正在检测更新"
+if [[ $update = $version ]]
+then
+    echo "当前版本:$version"
+    echo "已是最新版本"
+else
+    echo "当前版本与云端不一致"
+    echo "建议更新"
+    echo "----------------------------------------"
+    read -rp "是否更新[y|n]" -e update_res
+    if [[ $update_res = "y" ]]
+    then
+        rm -rf /usr/bin/autonpc
+        wget  -P /usr/bin/ http://nps.loline.top/shell/fx/autonpc
+        chmod 777 /usr/bin/autonpc
+        echo "更新完成"
+        echo "请重新执行autonpc命令运行脚本"
+        exit 1
+    fi
+fi
+
+IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
+
+web_kaishi=()
+web_jieshu=()
+web_number=()
+web_name=()
+web_host=()
+web_address=()
+web_hang_name=()
+web_hang_host=()
+web_hang_addr=()
+pd_host=()
+#--web临时数据列表
+
+port_kaishi=()
+port_number=()
+port_name=()
+port_mod=()
+port_addr=()
+port_server_port=()
+port_jieshu=()
+port_hang_name=()
+port_hang_mod=()
+port_hang_addr=()
+port_hang_server_port=()
+pd_port=()
+#--port临时数据列表
+
+function web_read_conf_web_type()
+{
+    if [[ $web_read_conf =~ "host=" ]]
+    then
+        web_host[$web_init2]="$web_read_conf"
+        pd_host[$web_init2]=${web_read_conf/host=/}
+        web_hang_host[$web_init2]=$web_init
+    elif [[ $web_read_conf =~ "target_addr" ]]
+    then
+        web_address[$web_init2]="$web_read_conf"
+        web_hang_addr[$web_init2]=$web_init
+    fi
+    }
+    #判断--web--内容
+
+function read_web
+{   
+    web_read_conf_web_type
+    web_init=1
+    web_init2=0
+    web_hang_number=$(sed -n '$=' /npc/conf/npc.conf)
+    web_read_conf=$(cat /npc/conf/npc.conf | tail -n +18 | head -n 1)
+    while (( $(($web_init)) < $(($web_hang_number)) ))
+    do
+        web_read_conf=$(cat /npc/conf/npc.conf | tail -n +$web_init | head -n 1)
+        if [[ $web_read_conf = "#--web--" ]]
+        then
+            web_kaishi[$web_init2]=$web_init
+            web_init=$(($web_init+1))
+            web_read_conf=$(cat /npc/conf/npc.conf | tail -n +$web_init | head -n 1)
+            web_number[$web_init2]=$web_init2
+            web_name[$web_init2]=$web_read_conf
+            web_hang_name[$web_init2]=$web_init
+            web_init=$(($web_init+1))
+                    
+            while [[ $web_read_conf != "#--web--" ]]
+            do
+                web_read_conf=$(cat /npc/conf/npc.conf | tail -n +$web_init | head -n 1)
+                web_read_conf_web_type
+                web_init=$(($web_init+1))
+            done
+            web_jieshu[$web_init2]=$(($web_init-1))
+            web_init2=$(($web_init2+1))
+        fi
+        web_init=$(($web_init+1))
+    done
+}
+#将web读入列表
+
+
+function web_read_conf_web()
+{
+    read_web
+    read_list=0
+    while (( $(($read_list)) < $((${#web_number[*]})) ))
+    do
+        echo "编号:${web_number[$read_list]}"
+        echo "开始行${web_kaishi[$read_list]}"
+        echo "配置文件第${web_hang_name[$read_list]}行，备注:${web_name[$read_list]}"
+        echo "配置文件第${web_hang_host[$read_list]}行，域名:${web_host[$read_list]/host=/}"
+        echo "配置文件第${web_hang_addr[$read_list]}行，本地IP地址与端口:${web_address[$read_list]/target_addr=/}"
+        echo "结束行${web_jieshu[$read_list]}"
+        echo "----------------------------------------"
+
+        read_list=$(($read_list+1))
+    done
+}
+#读取web配置列表
+
+function rm_conf_web()
+{
+    read_web
+    web_read_conf_web
+    read -rp "删除配置[y|n]:" -e rm_web_conf
+    if [[ $rm_web_conf = "y" ]]
+    then
+        read -rp "输入删除编号:" -e rm_web_number
+        rm_web_chushi=${web_kaishi[$rm_web_number]}
+        rm_web_jieshu=${web_jieshu[$rm_web_number]}
+        rm_web_hang=$rm_web_chushi
+        while (( $(($rm_web_chushi)) <= $(($rm_web_jieshu+1)) ))
+        do 
+            sed -i $rm_web_hang'd' /npc/conf/npc.conf
+            rm_web_chushi=$(($rm_web_chushi+1))
+        done
+        echo "删除成功"
+    fi
+}
+#删除配置
+
+function npc_web_write()
+{
+    web_read_conf_web
+    echo "如果是http协议，则本地端口为80"
+    echo "如果是https协议，则本地端口为443"
+    echo "----------------------------------------"
+    web_hang_number=$(sed -n '$=' /npc/conf/npc.conf)
+    read -rp "给这个web起一个备注:" -e web_w_name
+    read -rp "域名为:" -e web_w_host
+    read -rp "本地局域网IP和端口(例$IP:80):" -e web_w_addr
+   
+    read_web
+
+    pd_lang_name=${#web_name[@]}
+    pd_i=0
+    while (( $(($pd_i)) < $(($pd_lang_name)) ))
+    do
+        if [[ ${web_name[$pd_i]} = "[$web_w_name]" ]]
+        then
+            echo "备注重复，脚本已退出，请重新配置"
+            echo "----------------------------------------"
+            exit 1
+        else
+            pd_i=$(($pd_i+1))
+        fi
+    done
+
+    pd_lang=${#pd_host[@]}
+    pd_i=0
+    while (( $(($pd_i)) < $(($pd_lang)) ))
+    do
+        if [[ ${pd_host[$pd_i]} = $web_w_host ]]
+        then
+            echo "域名重复，脚本已退出，请重新配置"
+            echo "----------------------------------------"
+            exit 1
+        else
+            pd_i=$(($pd_i+1))
+        fi
+    done
+
+    web_w_name_i="[$web_w_name]"
+    web_w_host_i="host=$web_w_host"
+    web_w_addr_i="target_addr=$web_w_addr"
+
+    #判断重复
+    echo "" >> /npc/conf/npc.conf
+    echo "#--web--" >> /npc/conf/npc.conf
+    echo "$web_w_name_i" >> /npc/conf/npc.conf
+    echo "$web_w_host_i" >> /npc/conf/npc.conf
+    echo "$web_w_addr_i" >> /npc/conf/npc.conf
+    echo "#--web--" >> /npc/conf/npc.conf
+    web_read_conf_web
+    echo "写入成功"
+    echo "----------------------------------------"
+}
+#写入配置
+# npc_web_write
+
+function read_server()
+{
+    cat_npc_server=$(cat /npc/conf/npc.conf | grep "server_addr")
+    cat_npc_server_o="服务器地址与端口：${cat_npc_server/server_addr=/}"
+
+    cat_npc_key=$(cat /npc/conf/npc.conf | grep "vkey")
+    cat_npc_key_o="密钥：${cat_npc_key/vkey=/}"
+
+    cat_npc_type=$(cat /npc/conf/npc.conf | grep "conn_type")
+    cat_npc_type_o="协议：${cat_npc_type/conn_type=/}"
+
+    cat_npc_web_user=$(cat /npc/conf/npc.conf | grep "web_username")
+    cat_npc_web_user_o="客户端web用户名:${cat_npc_web_user/web_username=/}"
+
+    cat_npc_web_pass=$(cat /npc/conf/npc.conf | grep "web_password")
+    cat_npc_web_pass_o="客户端web密码:${cat_npc_web_pass/web_password=/}"
+
+    key_aaa_port=${cat_npc_key/vkey=/}
+}
+#读配置文件
+
+function server_config()
+{
+    read_server
+    #读取桥配置文件
+    echo "----------------------------------------"
+    echo "1.读取桥通信配置"
+    echo "2.修改桥通信配置"
+    echo "----------------------------------------"
+
+    read -rp "请输入选择:" -e server_number
+    echo "----------------------------------------"
+    if [[ $server_number = "1" ]]
+    then
+        read_server
+        echo $cat_npc_server_o
+        echo $cat_npc_key_o
+        echo $cat_npc_type_o
+        if [[ ${cat_npc_web_user/web_username=/} != "#" ]] 
+        then
+            echo $cat_npc_web_user_o
+        fi
+
+        if [[ ${cat_npc_web_pass/web_password=/} != "#" ]] 
+        then
+            echo $cat_npc_web_pass_o
+        fi
+        echo "----------------------------------------"
+    elif [[ $server_number = "2" ]]
+    then
+        read -rp "请输入服务器地址和端口号(例$IP:80)：" -e server
+        read -rp "请输入服务器唯一密钥:" -e server_key
+        until [[ $npc_type =~ (tcp|kcp) ]]; do
+            read -rp "请选择服务器端通信传输协议类型(tcp|kcp): " -e npc_type
+        done
+
+        until [[ $web_aaa =~ (y|n) ]]; do
+            read -rp "是否需要配置web认证用户(y|n): " -e web_aaa
+        done
+        if [[ $web_aaa = "y" ]]
+        then
+            read -rp "请输入web端用户名:" -e web_user
+            read -rp "请输入web端密码:" -e web_pass
+        fi
+
+        echo "----------------------------------------"
+        echo "正在写入......"
+        read_server
+
+        sed -i "s/$cat_npc_server/server_addr=$server/g" `grep -rl "$cat_npc_server" /npc/conf/npc.conf`
+        sed -i "s/$cat_npc_key/vkey=$server_key/g" `grep -rl "$cat_npc_key" /npc/conf/npc.conf`
+        sed -i "s/$cat_npc_type/conn_type=$npc_type/g" `grep -rl "$cat_npc_type" /npc/conf/npc.conf`
+        if [[ $web_aaa = "y" ]]
+        then
+            sed -i "s/$cat_npc_web_user/web_username=$web_user/g" `grep -rl "$cat_npc_web_user" /npc/conf/npc.conf`
+            sed -i "s/$cat_npc_web_pass/web_password=$web_pass/g" `grep -rl "$cat_npc_web_pass" /npc/conf/npc.conf`
+        else
+            sed -i "s/$cat_npc_web_user/#web_username=/g" `grep -rl "$cat_npc_web_user" /npc/conf/npc.conf`
+            sed -i "s/$cat_npc_web_pass/#web_password=/g" `grep -rl "$cat_npc_web_pass" /npc/conf/npc.conf`      
+        fi
+        read_server
+        echo "完成"
+        echo "----------------------------------------"
+        echo $cat_npc_server_o
+        echo $cat_npc_key_o
+        echo $cat_npc_type_o
+        if [[ ${cat_npc_web_user/web_username=/} != "#" ]] 
+        then
+            echo $cat_npc_web_user_o
+        fi
+
+        if [[ ${cat_npc_web_pass/web_password=/} != "#" ]] 
+        then
+            echo $cat_npc_web_pass_o
+        fi
+        echo "--------------------------------------"
+    else
+        echo "输入有误"
+    fi
+
+}
+#写入桥配置
+
+function read_port
+{   
+    function port_read_conf_port_type()
+    {
+        if [[ $port_read_conf =~ "mode=" ]]
+        then
+            port_mod[$port_init2]="$port_read_conf"
+            port_hang_mod[$port_init2]=$port_init
+        elif [[ $port_read_conf =~ "target_addr=" ]]
+        then
+            port_addr[$port_init2]="$port_read_conf"
+            port_hang_addr[$port_init2]=$port_init
+        elif [[ $port_read_conf =~ "server_port=" ]]
+        then
+            port_server_port[$port_init2]="$port_read_conf"
+            pd_port[$port_init2]="${port_read_conf/server_port=/}"
+            port_hang_server_port[$port_init2]=$port_init
+        fi
+    }
+    #判断--port--内容
+    port_init=1
+    port_init2=0
+    port_hang_number=$(sed -n '$=' /npc/conf/npc.conf)
+    port_read_conf=$(cat /npc/conf/npc.conf | tail -n +18 | head -n 1)
+    while (( $(($port_init)) < $(($port_hang_number)) ))
+    do
+        port_read_conf=$(cat /npc/conf/npc.conf | tail -n +$port_init | head -n 1)
+        if [[ $port_read_conf = "#--port--" ]]
+        then
+            port_kaishi[$port_init2]=$port_init
+            port_init=$(($port_init+1))
+            port_read_conf=$(cat /npc/conf/npc.conf | tail -n +$port_init | head -n 1)
+            port_number[$port_init2]=$port_init2
+            port_name[$port_init2]=$port_read_conf
+            port_hang_name[$port_init2]=$port_init
+            port_init=$(($port_init+1))
+                    
+            while [[ $port_read_conf != "#--port--" ]]
+            do
+                port_read_conf=$(cat /npc/conf/npc.conf | tail -n +$port_init | head -n 1)
+                port_read_conf_port_type
+                port_init=$(($port_init+1))
+            done
+            port_jieshu[$port_init2]=$(($port_init-1))
+            port_init2=$(($port_init2+1))
+        fi
+        port_init=$(($port_init+1))
+    done
+}
+#将port读入列表
+
+function port_read_conf_port()
+{
+    read_port
+    read_list=0
+    while (( $(($read_list)) < $((${#port_number[*]})) ))
+    do
+        echo "编号:${port_number[$read_list]}"
+        echo "开始行${port_kaishi[$read_list]}"
+        echo "配置文件第${port_hang_name[$read_list]}行，名称:${port_name[$read_list]}"
+        echo "配置文件第${port_hang_mod[$read_list]}行，模式:${port_mod[$read_list]/mode=/}"
+        echo "配置文件第${port_hang_addr[$read_list]}行，局域网IP地址与端口:${port_addr[$read_list]/target_addr=/}"
+        echo "配置文件第${port_hang_server_port[$read_list]}行，服务器端口:${port_server_port[$read_list]/server_port=/}"
+        echo "结束行${port_jieshu[$read_list]}"
+        echo "----------------------------------------"
+
+        read_list=$(($read_list+1))
+    done
+}
+#读取port配置列表
+
+function rm_conf_port()
+{
+    read_port
+    port_read_conf_port
+    read -rp "删除配置[y|n]" -e rm_port_conf
+    if [[ $rm_port_conf = "y" ]]
+    then
+        read -rp "输入删除编号:" -e rm_port_number
+        rm_port_chushi=${port_kaishi[$rm_port_number]}
+        rm_port_jieshu=${port_jieshu[$rm_port_number]}
+        rm_port_hang=$rm_port_chushi
+        while (( $((rm_port_chushi)) <= $((rm_port_jieshu+1)) ))
+        do
+            sed -i $rm_port_hang'd' /npc/conf/npc.conf
+            rm_port_chushi=$(($rm_port_chushi+1))
+        done
+        echo "删除成功"
+    fi
+}
+#删除port配置
+
+function npc_port_write()
+{
+    port_hang_number=$(sed -n '$=' /npc/conf/npc.conf)
+    port_read_conf_port
+
+    read -rp "给这个port起一个备注:" -e port_w_name
+    until [[ $port_w_mod =~ (tcp|udp) ]]; do
+        read -rp "模式为[tcp|udp]:" -e port_w_mod
+    done
+    read -rp "本地局域网IP和端口(例$IP:80):" -e port_w_addr
+    read -rp "服务器端口:" -e port_w_server
+    
+    pd_port_name=${#port_name[@]}
+    pd_i=0
+    while (( $(($pd_i)) < $(($pd_port_name)) ))
+    do
+        if [[ ${port_name[$pd_i]} = "[$port_w_name]" ]]
+        then
+            echo "备注重复，脚本已退出，请重新配置"
+            echo "----------------------------------------"
+            exit 1
+        else
+            pd_i=$(($pd_i+1))
+        fi
+    done
+
+    pd_lang=${#pd_port[@]}
+    pd_i=0
+    while (( $(($pd_i)) < $(($pd_lang)) ))
+    do
+        if [[ ${pd_port[$pd_i]} = $port_w_server ]]
+        then
+            echo "端口重复，脚本已退出，请重新配置"
+            exit 1
+        else
+            pd_i=$(($pd_i+1))
+        fi
+    done
+    #判断重复
+    echo "----------------------------------------"
+    port_w_name_i="[$port_w_name]"
+    port_w_mod_i="mode=$port_w_mod"
+    port_w_addr_i="target_addr=$port_w_addr"
+    port_w_server_i="server_port=$port_w_server"
+
+    echo "" >> /npc/conf/npc.conf
+    echo "#--port--" >> /npc/conf/npc.conf
+    echo "$port_w_name_i" >> /npc/conf/npc.conf
+    echo "$port_w_mod_i" >> /npc/conf/npc.conf
+    echo "$port_w_addr_i" >> /npc/conf/npc.conf
+    echo "$port_w_server_i" >> /npc/conf/npc.conf
+    echo "#--port--" >> /npc/conf/npc.conf
+    
+    port_read_conf_port
+    echo "写入成功"
+    echo "----------------------------------------"
+}
+#写入配置
+
+echo "----------------------------------------"
+echo "欢迎使用NPC客户端配置脚本"
+echo "1.查看/配置通信桥"
+echo "2.查看/配置web网页解析"
+echo "3.查看/配置[TCP|UDP]端口"
+echo "4.卸载NPC服务"
+echo "5.退出并自动重启"
+echo "----------------------------------------"
+
+read -rp "请输入数字:" -e shell_xunaze
+
+if [[ $shell_xunaze = "1" ]]
+then
+    server_config
+elif [[ $shell_xunaze = "2" ]]
+then
+    echo "----------------------------------------"
+    echo "web配置"
+    echo "1.读取web配置"
+    echo "2.删除web配置"
+    echo "3.添加web配置"
+    echo "4.退出"
+    echo "----------------------------------------"
+    read -rp "请输入数字:" -e shell_web_xuanze
+    echo "----------------------------------------"
+
+    if [[ $shell_web_xuanze = "1" ]]
+    then
+        web_read_conf_web
+    elif [[ $shell_web_xuanze = "2" ]]
+    then
+        rm_conf_web
+    elif [[ $shell_web_xuanze = "3" ]]
+    then
+        npc_web_write
+    else
+        exit 1
+    fi
+
+elif [[ $shell_xunaze = "3" ]]
+then
+    echo "----------------------------------------"
+    echo "port配置"
+    echo "1.读取port配置"
+    echo "2.删除port配置"
+    echo "3.添加port配置"
+    echo "4.退出"
+    echo "----------------------------------------"
+    read -rp "请输入数字:" -e shell_port_xuanze
+    echo "----------------------------------------"
+
+    if [[ $shell_port_xuanze = "1" ]]
+    then
+        port_read_conf_port
+    elif [[ $shell_port_xuanze = "2" ]]
+    then
+        rm_conf_port
+    elif [[ $shell_port_xuanze = "3" ]]
+    then
+        npc_port_write
+    else
+        exit 1
+    fi
+elif [[ $shell_xunaze = "4" ]]
+then
+    until [[ $uninstall =~ (y|n) ]]; do
+        read -rp "请输入(y|n)选择卸载: " -e uninstall
+    done
+
+    if [[ $uninstall = "y" ]]
+    then
+        rm -rf /root/linux_amd64_client*
+        rm -rf /root/linux_arm64_client*
+        rm -rf /root/linux_arm_v5_client*
+        rm -rf /usr/bin/npc*
+        rm -rf /usr/bin/autonpc
+        /npc/npc stop
+        /npc/npc uninstall
+        rm -rf /npc
+
+        echo "卸载完成";
+    elif [[ $uninstall = "n" ]]
+    then
+        echo "exiting";
+        exit 1    
+    else
+        echo "exiting";
+        exit 1
+    fi
+        # 卸载npc相关文件
+else
+    echo "欢迎使用，你可以通过autonpc命令再次使用"
+    exit 1
+fi
+
+echo "欢迎使用，你可以通过autonpc命令再次使用"
+npc restart -config=/npc/conf/npc.conf
