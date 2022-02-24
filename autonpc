@@ -2,7 +2,7 @@
 
 echo "----------------------------------------"
 echo "正在检测更新....."
-version="1.0.4"
+version="1.0.5"
 update=$(wget http://nps.loline.top/shell/update.html -q -O -)
 echo "----------------------------------------"
 echo "正在检测更新"
@@ -20,7 +20,7 @@ else
     if [[ $update_res = "y" ]]
     then
         rm -rf /usr/bin/autonpc
-        wget  -P /usr/bin/ http://nps.loline.top/shell/fx/autonpc
+        wget -P /usr/bin/ http://nps.loline.top/shell/autonpc
         chmod 777 /usr/bin/autonpc
         echo "更新完成"
         echo "请重新执行autonpc命令运行脚本"
@@ -405,12 +405,47 @@ function npc_port_write()
     port_hang_number=$(sed -n '$=' /npc/conf/npc.conf)
     port_read_conf_port
 
+
+    #判断端口
+    read_server
+    aaa_key=${#key_aaa_port}
+    if [[ $aaa_key = "14" ]]
+    then
+        aaa_kaishi_port=${key_aaa_port:5:4}
+        aaa_jieshu_port=${key_aaa_port:10:4}
+        echo "可用服务器端口范围:$aaa_kaishi_port-$aaa_jieshu_port"
+    elif [[ $aaa_key = "16" ]]
+    then
+        aaa_kaishi_port=${key_aaa_port:5:5}
+        aaa_jieshu_port=${key_aaa_port:11:5}
+        echo "可用服务器端口范围:$aaa_kaishi_port-$aaa_jieshu_port"
+    else
+        echo "密钥无法识别"
+    fi
+    #判断端口
+
     read -rp "给这个port起一个备注:" -e port_w_name
     until [[ $port_w_mod =~ (tcp|udp) ]]; do
         read -rp "模式为[tcp|udp]:" -e port_w_mod
     done
     read -rp "本地局域网IP和端口(例$IP:80):" -e port_w_addr
-    read -rp "服务器端口:" -e port_w_server
+
+    aaa_pd=0
+    while [[ $aaa_pd != "1" ]]
+    do
+        read -rp "服务器端口:" -e port_w_server
+        if [[ $port_w_server < $(($aaa_kaishi_port)) ]]
+        then
+            echo "超出端口范围"
+            echo "可用服务器端口范围:$aaa_kaishi_port-$aaa_jieshu_port"
+        elif [[ $port_w_server > $(($aaa_jieshu_port)) ]]
+        then
+            echo "超出端口范围"
+            echo "可用服务器端口范围:$aaa_kaishi_port-$aaa_jieshu_port"
+        else
+            aaa_pd=1
+        fi
+    done
     
     pd_port_name=${#port_name[@]}
     pd_i=0
@@ -466,6 +501,9 @@ echo "2.查看/配置web网页解析"
 echo "3.查看/配置[TCP|UDP]端口"
 echo "4.卸载NPC服务"
 echo "5.退出并自动重启"
+echo "6.重置配置文件"
+echo "7.备份配置文件"
+echo "8.删除配置文件"
 echo "----------------------------------------"
 
 read -rp "请输入数字:" -e shell_xunaze
@@ -549,6 +587,45 @@ then
         exit 1
     fi
         # 卸载npc相关文件
+elif [[ $shell_xunaze = "6" ]]
+then
+    until [[ $ress =~ (y|n) ]]; do
+        read -rp "真的要重置吗，这会删除当前所有配置文件(y|n): " -e ress
+    done
+    if [[ $ress = "y" ]]
+    then
+        rm -rf /npc/conf/npc.conf
+        touch /npc/conf/npc.conf
+        
+        echo "#--common--" >> /npc/conf/npc.conf
+        echo "[common]" >> /npc/conf/npc.conf
+        echo "server_addr=" >> /npc/conf/npc.conf
+        echo "conn_type=" >> /npc/conf/npc.conf
+        echo "vkey=" >> /npc/conf/npc.conf
+        echo "#web_username=" >> /npc/conf/npc.conf
+        echo "#web_password=" >> /npc/conf/npc.conf
+        echo "#--common--" >> /npc/conf/npc.conf
+        echo "重置成功"
+        echo "----------------------------------------"
+    else
+        echo "配置文件已清空，你可以通过autonpc命令再次使用"
+        exit 1
+    fi
+#重置配置文件
+elif [[ $shell_xunaze = "7" ]]
+then
+    cp /npc/conf/npc.conf /npc/conf/npc.conf.bak
+    echo "备份完成"
+    echo "----------------------------------------"
+#备份
+elif [[ $shell_xunaze = "8" ]]
+then
+    cp /npc/conf/npc.conf /npc/conf/npc.conf.bak2
+    cp /npc/conf/npc.conf.bak /npc/conf/npc.conf
+    rm -rf /npc/conf/npc.conf.bak2
+    echo "恢复完成"
+    echo "----------------------------------------"
+#恢复
 else
     echo "欢迎使用，你可以通过autonpc命令再次使用"
     exit 1
