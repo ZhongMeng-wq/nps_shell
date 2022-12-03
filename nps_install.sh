@@ -25,8 +25,18 @@ echo "-----------------------------------------------------------"
 
 IP=$(ip addr | grep 'inet' | grep -v inet6 | grep -vE '127\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}' | head -1)
 server_ip="此服务器IP地址是$IP"
-hainei=(https://gitee.com/zhang20021230/nps-domestic-package/attach_files/967435/download/linux_amd64_server.tar.gz https://gitee.com/zhang20021230/nps-domestic-package/attach_files/967437/download/linux_arm64_server.tar.gz https://gitee.com/zhang20021230/nps-domestic-package/attach_files/967436/download/linux_arm_v5_server.tar.gz)
-haiwai=(https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_amd64_server.tar.gz https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_arm64_server.tar.gz https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_arm_v5_server.tar.gz)
+hainei=(
+    https://loline.top/dow/nps/linux_amd64_server.tar.gz 
+    https://loline.top/dow/nps/linux_arm64_server.tar.gz 
+    https://loline.top/dow/nps/linux_arm_v5_server.tar.gz
+)
+
+
+haiwai=(
+    https://loline.top/dow/nps/linux_amd64_server.tar.gz 
+    https://loline.top/dow/nps/linux_arm64_server.tar.gz 
+    https://loline.top/dow/nps/linux_arm_v5_server.tar.gz
+)
 #IP参数和链接
 
 function out_config()
