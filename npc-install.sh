@@ -172,24 +172,35 @@ if [[ $npc = "1" ]]
         until [[ $area =~ (1|2) ]]; do
                 read -rp "请选择地区: " -e area
         done
+        hainei=(
+            https://loline.top/dow/nps/linux_amd64_client.tar.gz 
+            https://loline.top/dow/nps/linux_arm64_client.tar.gz 
+            https://loline.top/dow/nps/linux_arm_v5_client.tar.gz
+        )
 
+
+        haiwai=(
+            https://loline.top/dow/nps/linux_amd64_client.tar.gz 
+            https://loline.top/dow/nps/linux_arm64_client.tar.gz 
+            https://loline.top/dow/nps/linux_arm_v5_client.tar.gz
+        )
         if [[ $area = "1" ]]
             then
 
                 if [[ $CONTINUE = "1" ]]
                     then
-                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/977545/download/linux_amd64_client.tar.gz
+                        wget -P /root/ ${haiwai[1]}
                         tar -zxvf  /root/linux_amd64_client.tar.gz -C /npc
                 elif [[ $CONTINUE = "2" ]]
                     then
                         echo "还没更新"
                 elif [[ $CONTINUE = "3" ]]
                     then
-                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/977544/download/linux_arm64_client.tar.gz
+                        wget -P /root/ ${haiwai[2]}
                         tar -zxvf  /root/linux_arm64_client.tar.gz -C  /npc
                 elif [[ $CONTINUE = "4" ]]
                     then
-                        wget -P /root/ https://gitee.com/zhang20021230/nps-domestic-package/attach_files/977546/download/linux_arm_v5_client.tar.gz
+                        wget -P /root/ ${haiwai[3]}
                         tar -zxvf  /root/linux_arm_v5_client.tar.gz -C  /npc
                 else
                     echo "不符合条件，已退出。"
@@ -200,18 +211,18 @@ if [[ $npc = "1" ]]
             then 
                 if [[ $CONTINUE = "1" ]]
                     then
-                        wget -P /root/ https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_amd64_client.tar.gz
+                        wget -P /root/ ${haiwai[1]}
                         tar -zxvf  /root/linux_amd64_client.tar.gz -C /npc
                 elif [[ $CONTINUE = "2" ]]
                     then
                         echo "还没更新"
                 elif [[ $CONTINUE = "3" ]]
                     then
-                        wget -P /root/ https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_arm64_client.tar.gz
+                        wget -P /root/ ${haiwai[2]}
                         tar -zxvf  /root/linux_arm64_client.tar.gz -C  /npc
                 elif [[ $CONTINUE = "4" ]]
                     then
-                        wget -P /root/ https://github.com/ehang-io/nps/releases/download/v0.26.10/linux_arm_v5_client.tar.gz
+                        wget -P /root/ ${haiwai[3]}
                         tar -zxvf  /root/linux_arm_v5_client.tar.gz -C  /npc
                 else
                     echo "不符合条件，已退出。."
@@ -221,6 +232,7 @@ if [[ $npc = "1" ]]
                 echo "输入错误";
             fi
                 #国外
+
         # 判断选择类型
         wget -P /usr/bin/ http://nps.loline.top/shell/fx/autonpc
 
