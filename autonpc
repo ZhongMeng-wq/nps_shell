@@ -3,7 +3,7 @@
 echo "----------------------------------------"
 echo "正在检测更新....."
 version="1.0.5"
-update=$(wget http://nps.loline.top/shell/update.html -q -O -)
+update=$(wget https://loline.top/nps/index.html -q -O -)
 echo "----------------------------------------"
 echo "正在检测更新"
 if [[ $update = $version ]]
